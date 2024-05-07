@@ -1,0 +1,58 @@
+Торопов Арсений Алексеевич
+
+Для удобства применения я создал БД в Python и использовал простейшую СУБД sqlite, так как данных совсем немного.
+
+Так же можно запустить файл main.py и получить все результаты выполнения программы.
+
+1. Вывести уникальные номера договоров из таблицы ТД
+
+SELECT DISTINCT doc_num FROM TD
+
+2. Вывести таблицу ТД, только с оборудованием
+
+SELECT * FROM TD WHERE service = 'Оборудование'
+
+3. Вывести все ТД, которые входят в пакет Формат: Номер договора, Код ТД Пакета, Код ТД, Услуга
+
+SELECT t1.doc_num, t1.code_TD AS Код_ТД_Пакета, t2.code_TD AS Код_ТД, t2.service AS Услуга
+    FROM TD t1
+    JOIN TD t2 ON t1.doc_num = t2.doc_num AND t1.link = t2.code_TD
+
+4. Вывести всю таблицу с ТД с E-mail абонента
+
+SELECT TD.*, email.email
+    FROM TD
+    LEFT JOIN email ON TD.doc_num = email.doc_num
+
+5. Вывести только тех абонентов, у которых нет E-mail
+
+SELECT TD.*
+    FROM TD
+    LEFT JOIN email ON TD.doc_num = email.doc_num
+    WHERE email.doc_num IS NULL
+
+6. Вывести таблицу ТД с действующими услугами в следующем формате: Номер договора, массив из Код ТД, массив из услуг
+
+SELECT doc_num,
+           GROUP_CONCAT(code_TD) AS Код_ТД,
+           GROUP_CONCAT(service) AS Услуги
+    FROM TD
+    WHERE NOT deleted
+    GROUP BY doc_num
+
+7. Как создается временная таблица?
+
+Сначала в памяти выделяется место под временную таблицу. Временная таблица может существовать:
+- в оперативной памяти (CREATE TEMP TABLE temp_table (...);)
+- во временной БД (CREATE TEMP DATABASE temp_db (...);)
+- с использованием WITH, эта возможность зависит от СУБД (WITH temp_table AS (...);)
+- по аналогии с предыдущими пунктами создать временную таблицу можно в хранимых процедурах и функциях
+
+8. Самопроизвольный код с использованием CTE на данных таблицах
+
+WITH td_with_email AS (
+        SELECT TD.*, email.email
+        FROM TD
+        LEFT JOIN email ON TD.doc_num = email.doc_num
+    )
+    SELECT * FROM td_with_email;
